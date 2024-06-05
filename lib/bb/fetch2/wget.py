@@ -56,7 +56,7 @@ class Wget(FetchMethod):
     # CDNs like CloudFlare may do a 'browser integrity test' which can fail
     # with the standard wget/urllib User-Agent, so pretend to be a modern
     # browser.
-    user_agent = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0"
+    user_agent = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:126.0) Gecko/20100101 Firefox/126.0"
 
     def check_certs(self, d):
         """
@@ -88,6 +88,15 @@ class Wget(FetchMethod):
             ud.localfile = d.expand(urllib.parse.unquote(ud.host + ud.path).replace("/", "."))
 
         self.basecmd = d.getVar("FETCHCMD_wget") or "/usr/bin/env wget -t 2 -T 30"
+
+        is_user_agent_enabled = ud.parm.get("user_agent","0") == "1"
+        if is_user_agent_enabled:
+            bb_user_agent = d.getVar("BB_USER_AGENT")
+            if bb_user_agent is not None:
+                cmd_user_agent = bb_user_agent
+            else:
+                cmd_user_agent = self.user_agent
+            self.basecmd += f" --user-agent='{cmd_user_agent}'"
 
         if ud.type == 'ftp' or ud.type == 'ftps':
             self.basecmd += " --passive-ftp"
