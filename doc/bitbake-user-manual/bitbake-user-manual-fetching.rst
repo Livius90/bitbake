@@ -221,13 +221,18 @@ HTTP/FTP wget fetcher (``http://``, ``ftp://``, ``https://``)
 This fetcher obtains files from web and FTP servers. Internally, the
 fetcher uses the wget utility.
 
-The executable and parameters used are specified by the
-``FETCHCMD_wget`` variable, which defaults to sensible values. The
-fetcher supports a parameter "downloadfilename" that allows the name of
-the downloaded file to be specified. Specifying the name of the
-downloaded file is useful for avoiding collisions in
-:term:`DL_DIR` when dealing with multiple files that
-have the same name.
+The executable and parameters used are specified by the ``FETCHCMD_wget``
+variable, which defaults to sensible values. The fetcher supports
+parameters, "downloadfilename" that allows the name of the downloaded
+file to be specified and "user_agent" parameter which enable to use
+a default ``Mozilla/5.0`` user-agent or a custom string value
+via usage of :term:`BB_USER_AGENT`.
+
+Specifying the name of the downloaded file is useful for avoiding
+collisions in :term:`DL_DIR` when dealing with multiple files
+that have the same name. A few HTTP servers block requests with
+the default wget user-agent, in this case specifying a valid
+user-agent can solve this issue.
 
 If a username and password are specified in the ``SRC_URI``, a Basic
 Authorization header will be added to each request, including across redirects.
@@ -239,6 +244,7 @@ Some example URLs are as follows::
    SRC_URI = "http://oe.handhelds.org/not_there.aac"
    SRC_URI = "ftp://oe.handhelds.org/not_there_as_well.aac"
    SRC_URI = "ftp://you@oe.handhelds.org/home/you/secret.plan"
+   SRC_URI = "https://oe.handhelds.org/not_there.aac;user_agent=1"
 
 .. note::
 
