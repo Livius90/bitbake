@@ -52,11 +52,8 @@ class WgetProgressHandler(bb.progress.LineFilterProgressHandler):
 
 class Wget(FetchMethod):
     """Class to fetch urls via 'wget'"""
-
-    # CDNs like CloudFlare may do a 'browser integrity test' which can fail
-    # with the standard wget/urllib User-Agent, so pretend to be a modern
-    # browser.
-    user_agent = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:126.0) Gecko/20100101 Firefox/126.0"
+    def init(self, d):
+        self.user_agent = d.getVar("BB_USER_AGENT")
 
     def check_certs(self, d):
         """
@@ -91,12 +88,7 @@ class Wget(FetchMethod):
 
         is_user_agent_enabled = ud.parm.get("user_agent","0") == "1"
         if is_user_agent_enabled:
-            bb_user_agent = d.getVar("BB_USER_AGENT")
-            if bb_user_agent is not None:
-                cmd_user_agent = bb_user_agent
-            else:
-                cmd_user_agent = self.user_agent
-            self.basecmd += f" --user-agent='{cmd_user_agent}'"
+            self.basecmd += f" --user-agent='{self.user_agent}'"
 
         if ud.type == 'ftp' or ud.type == 'ftps':
             self.basecmd += " --passive-ftp"
