@@ -223,10 +223,13 @@ fetcher uses the wget utility.
 
 The executable and parameters used are specified by the ``FETCHCMD_wget``
 variable, which defaults to sensible values. The fetcher supports
-parameters, "downloadfilename" that allows the name of the downloaded
-file to be specified and "user_agent" parameter which enable to use
-a default ``Mozilla/5.0`` user-agent or a custom string value
-via usage of :term:`BB_USER_AGENT`.
+parameters:
+
+-  *downloadfilename:* That allows the name of the downloaded file
+   to be specified.
+
+-  *user_agent:* Enable to use a default ``Mozilla/5.0`` user-agent
+   which is defined in :term:`BB_USER_AGENT`.
 
 Specifying the name of the downloaded file is useful for avoiding
 collisions in :term:`DL_DIR` when dealing with multiple files
