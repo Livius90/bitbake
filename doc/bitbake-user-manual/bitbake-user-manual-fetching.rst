@@ -228,8 +228,8 @@ parameters:
 -  *downloadfilename:* That allows the name of the downloaded file
    to be specified.
 
--  *user_agent:* Enable to use a default ``Mozilla/5.0`` user-agent
-   which is defined in :term:`BB_USER_AGENT`.
+-  *user_agent:* Enable to use a default ``bitbake/${BB_VERSION}`` user-agent
+   which is defined in :term:`BB_FETCH_USER_AGENT`.
 
 Specifying the name of the downloaded file is useful for avoiding
 collisions in :term:`DL_DIR` when dealing with multiple files

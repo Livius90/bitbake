@@ -53,7 +53,7 @@ class WgetProgressHandler(bb.progress.LineFilterProgressHandler):
 class Wget(FetchMethod):
     """Class to fetch urls via 'wget'"""
     def init(self, d):
-        self.user_agent = d.getVar("BB_USER_AGENT")
+        self.user_agent = d.getVar("BB_FETCH_USER_AGENT")
 
     def check_certs(self, d):
         """

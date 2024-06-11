@@ -699,9 +699,10 @@ overview of their function and contents.
       Within an executing task, this variable holds the hash of the task as
       returned by the currently enabled signature generator.
 
-   :term:`BB_USER_AGENT`
+   :term:`BB_FETCH_USER_AGENT`
       Specifies a user-agent string which BitBake uses if "user_agent"
-      parameter is enabled for HTTP/FTP wget fetcher.
+      parameter is enabled for HTTP/FTP wget fetcher. Default value can
+      be found in ``conf/bitbake.conf``.
 
    :term:`BB_VERBOSE_LOGS`
       Controls how verbose BitBake is during builds. If set, shell scripts
