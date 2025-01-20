@@ -129,8 +129,8 @@ class InteractConsoleLogFilter(logging.Filter):
 
 class TerminalFilter(object):
 
-    # 20 Hz (FPS) -> 0.050 secs
-    _DEFAULT_PRINT_INTERVAL = 1.0 / 20.0
+    # 10 Hz (FPS) -> 0.100 secs
+    _DEFAULT_PRINT_INTERVAL = 0.100
 
     rows = 25
     columns = 80
