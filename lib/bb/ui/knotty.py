@@ -128,6 +128,10 @@ class InteractConsoleLogFilter(logging.Filter):
         return True
 
 class TerminalFilter(object):
+
+    # 10 Hz (FPS) -> 0.100 secs
+    _DEFAULT_PRINT_INTERVAL = 0.100
+
     rows = 25
     columns = 80
 
@@ -166,7 +170,7 @@ class TerminalFilter(object):
         self.interactive = sys.stdout.isatty()
         self.footer_present = False
         self.lastpids = []
-        self.lasttime = None
+        self.lasttime = time.time()
         self.quiet = quiet
 
         self._footer_buf = io.StringIO()
@@ -251,11 +255,23 @@ class TerminalFilter(object):
         failedtasks = self.helper.failed_tasks
         runningpids = self.helper.running_pids
         currenttime = time.time()
-        if not self.lasttime or (currenttime - self.lasttime > 5):
+        deltatime = currenttime - self.lasttime
+
+        if (deltatime > 5.0):
             self.helper.needUpdate = True
-            self.lasttime = currenttime
-        if self.footer_present and not self.helper.needUpdate:
+            need_update = self.helper.needUpdate
+        else:
+            # Do not let to update faster then _DEFAULT_PRINT_INTERVAL
+            # to avoid heavy print() flooding.
+            need_update = self.helper.needUpdate and (deltatime > self._DEFAULT_PRINT_INTERVAL)
+
+        if self.footer_present and (not need_update):
+            # Footer update is not need.
             return
+        else:
+            # Footer update is need and store its "lasttime" value.
+            self.lasttime = currenttime
+
         self.helper.needUpdate = False
         if self.footer_present:
             self.clearFooter()
