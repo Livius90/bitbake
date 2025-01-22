@@ -10,6 +10,7 @@
 
 from __future__ import division
 
+import io
 import os
 import sys
 import logging
@@ -168,6 +169,9 @@ class TerminalFilter(object):
         self.lasttime = None
         self.quiet = quiet
 
+        self._footer_buf = io.StringIO()
+        self._footer_lines = None
+
         if not self.interactive:
             return
 
@@ -215,11 +219,11 @@ class TerminalFilter(object):
 
     def clearFooter(self):
         if self.footer_present:
-            lines = self.footer_present
-            sys.stdout.buffer.write(self.curses.tparm(self.cuu, lines))
+            sys.stdout.buffer.write(self.curses.tparm(self.cuu, self._footer_lines))
             sys.stdout.buffer.write(self.curses.tparm(self.ed))
             sys.stdout.flush()
         self.footer_present = False
+        self._footer_lines = None
 
     def elapsed(self, sec):
         hrs = int(sec / 3600.0)
@@ -257,6 +261,11 @@ class TerminalFilter(object):
             self.clearFooter()
         if (not self.helper.tasknumber_total or self.helper.tasknumber_current == self.helper.tasknumber_total) and not len(activetasks):
             return
+
+        # Clear footer buffer.
+        self._footer_buf.truncate(0)
+        self._footer_buf.seek(0)
+
         tasks = []
         for t in runningpids:
             start_time = activetasks[t].get("starttime", None)
@@ -275,6 +284,7 @@ class TerminalFilter(object):
                     else:
                         pbar = BBProgress("0: %s" % msg, 100, widgets=[' ', progressbar.Percentage(), ' ', progressbar.Bar(), ''], extrapos=5, resize_handler=self.sigwinch_handle)
                         pbar.bouncing = False
+                    pbar.fd = self._footer_buf
                     activetasks[t]["progressbar"] = pbar
                 tasks.append((pbar, msg, progress, rate, start_time))
             else:
@@ -285,7 +295,7 @@ class TerminalFilter(object):
                                 "Waiting for %s running tasks to finish", len(activetasks))
             if not self.quiet:
                 content += ':'
-            print(content)
+            print(content, file=self._footer_buf)
         else:
             scene_tasks = "%s of %s" % (self.helper.setscene_current, self.helper.setscene_total)
             cur_tasks = "%s of %s" % (self.helper.tasknumber_current, self.helper.tasknumber_total)
@@ -294,7 +304,7 @@ class TerminalFilter(object):
             if not self.quiet:
                 msg = "Setscene tasks: %s" % scene_tasks
                 content += msg + "\n"
-                print(msg)
+                print(msg, file=self._footer_buf)
 
             if self.quiet:
                 msg = "Running tasks (%s, %s)" % (scene_tasks, cur_tasks)
@@ -306,11 +316,12 @@ class TerminalFilter(object):
             if not self.main_progress or self.main_progress.maxval != maxtask:
                 widgets = [' ', progressbar.Percentage(), ' ', progressbar.Bar()]
                 self.main_progress = BBProgress("Running tasks", maxtask, widgets=widgets, resize_handler=self.sigwinch_handle)
+                self.main_progress.fd = self._footer_buf
                 self.main_progress.start(False)
             self.main_progress.setmessage(msg)
             progress = max(0, self.helper.tasknumber_current - 1)
             content += self.main_progress.update(progress)
-            print('')
+            print('', file=self._footer_buf)
         lines = self.getlines(content)
         if not self.quiet:
             for tasknum, task in enumerate(tasks[:(self.rows - 1 - lines)]):
@@ -326,14 +337,17 @@ class TerminalFilter(object):
                         content = pbar.update(progress)
                     else:
                         content = pbar.update(1)
-                    print('')
+                    print('', file=self._footer_buf)
                 else:
                     content = "%s: %s" % (tasknum, task)
-                    print(content)
+                    print(content, file=self._footer_buf)
                 lines = lines + self.getlines(content)
-        self.footer_present = lines
+        self._footer_lines = lines
+        self.footer_present = True
         self.lastpids = runningpids[:]
         self.lastcount = self.helper.tasknumber_current
+        # Print footer buffer.
+        print(self._footer_buf.getvalue(), end='')
 
     def getlines(self, content):
         lines = 0
@@ -342,6 +356,7 @@ class TerminalFilter(object):
         return lines
 
     def finish(self):
+        self._footer_buf.close()
         if self.stdinbackup:
             fd = sys.stdin.fileno()
             self.termios.tcsetattr(fd, self.termios.TCSADRAIN, self.stdinbackup)
